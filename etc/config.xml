@@ -6,25 +6,54 @@
                 <active>0</active>
                 <model>LenboxStandardFacade</model>
                 <title>Lenbox</title>
-                <mode>2</mode>
-                <allowspecific>0</allowspecific>
-                <notification>1</notification>
-                <use_custom_form>0</use_custom_form>
-                <order_status>pending</order_status>
-                <customer_cpf_attribute>customer|taxvat</customer_cpf_attribute>
-                <address_telephone_attribute>telephone</address_telephone_attribute>
-                <iframe_width>500</iframe_width>
-                <iframe_height>700</iframe_height>
+                <test_mode>1</test_mode>
+                <test_client_id>1575548961850x942705562301413600</test_client_id>
+                <test_auth_key>1575548537269x551789111684887000</test_auth_key>
+                <live_client_id></live_client_id>
+                <live_auth_key></live_auth_key>
                 <can_initialize>1</can_initialize>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
                 <can_void>1</can_void>
                 <can_cancel>1</can_cancel>
-                <can_refund>1</can_refund>
+                <can_refund>0</can_refund>
                 <can_use_checkout>1</can_use_checkout>
                 <is_gateway>1</is_gateway>
                 <payment_action>authorize</payment_action>
-                <hours_to_expires>72</hours_to_expires>
+                
+                <lenbox_3xg>
+                    <enable_3xg>1</enable_3xg>
+                    <min_3xg></min_3xg>
+                    <max_3xg></max_3xg>
+                </lenbox_3xg>
+                <lenbox_3xp>
+                    <enable_3xp>1</enable_3xp>
+                    <min_3xp></min_3xp>
+                    <max_3xp></max_3xp>
+                </lenbox_3xp>
+
+                <lenbox_4xg>
+                    <enable_4xg>1</enable_4xg>
+                    <min_4xg></min_4xg>
+                    <max_4xg></max_4xg>
+                </lenbox_4xg>
+                <lenbox_4xp>
+                    <enable_4xp>1</enable_4xp>
+                    <min_4xp></min_4xp>
+                    <max_4xp></max_4xp>
+                </lenbox_4xp>
+
+                <lenbox_10xg>
+                    <enable_10xg>1</enable_10xg>
+                    <min_10xg></min_10xg>
+                    <max_10xg></max_10xg>
+                </lenbox_10xg>
+                <lenbox_10xp>
+                    <enable_10xp>1</enable_10xp>
+                    <min_10xp></min_10xp>
+                    <max_10xp></max_10xp>
+                </lenbox_10xp>
+
             </lenbox_standard>
         </payment>
     </default>
