@@ -26,33 +26,156 @@
                 </field>
                 <field id="title" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
                     <label>Text to show on checkout</label>
-                </field>   
-                
-                
-            <group id="lenbox_3xg" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
-                <label>3X sans frais</label>
-                <field id="enable_3xg" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>Enable 3XG</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="min_3xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>Seuil Min</label>
-                    <depends>
-                        <field id="*/*/enable_3xg">1</field>
-                    </depends>
-                    <comment>Will use default lenbox configuration if empty</comment>
-                    <validate>validate-number validate-zero-or-greater</validate>
-                </field>
-                <field id="max_3xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>Seuil Min</label>
-                    <depends>
-                        <field id="*/*/enable_3xg">1</field>
-                    </depends>
-                    <comment>Will use default lenbox configuration if empty</comment>
-                    <validate>validate-number validate-zero-or-greater</validate>
-                </field>
-            </group>
-            
+                <!-- 3XG -->
+                <group id="lenbox_3xg" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>3X sans frais</label>
+                    <field id="enable_3xg" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Enable 3XG</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="min_3xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_3xg">1</field>
+                            <!-- the "*/*/*/" is the levels to dive down from root of this page  -->
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                    <field id="max_3xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_3xg">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                </group>
+                <!-- 3XP -->
+                <group id="lenbox_3xp" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>3X avec frais</label>
+                    <field id="enable_3xp" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Enable 3xp</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="min_3xp" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_3xp">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                    <field id="max_3xp" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_3xp">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                </group>
+
+
+                <!-- 4XG -->
+                <group id="lenbox_4xg" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>4X sans frais</label>
+                    <field id="enable_4xg" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Enable 4XG</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="min_4xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_4xg">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                    <field id="max_4xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_4xg">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                </group>
+                <!-- 4XP -->
+                <group id="lenbox_4xp" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>4X avec frais</label>
+                    <field id="enable_4xp" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Enable 4xp</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="min_4xp" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_4xp">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                    <field id="max_4xp" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_4xp">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                </group>
+
+                <!-- 10XG -->
+                <group id="lenbox_10xg" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>10X sans frais</label>
+                    <field id="enable_10xg" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Enable 10XG</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="min_10xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_10xg">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                    <field id="max_10xg" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_10xg">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                </group>
+                <!-- 10XP -->
+                <group id="lenbox_10xp" translate="label" type="text" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>10X avec frais</label>
+                    <field id="enable_10xp" translate="label" type="select" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Enable 10xp</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="min_10xp" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_10xp">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                    <field id="max_10xp" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                        <label>Seuil Min</label>
+                        <depends>
+                            <field id="*/*/*/enable_10xp">1</field>
+                        </depends>
+                        <comment>Will use default lenbox configuration if empty</comment>
+                        <validate>validate-number validate-zero-or-greater</validate>
+                    </field>
+                </group>
+
             </group>
 
         </section>
