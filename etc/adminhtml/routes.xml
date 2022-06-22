@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="admin">
+        <route id="Lenbox_CbnxPayment" frontName="Lenbox_CbnxPayment">
+            <module before="Magento_Backend" name="Lenbox_CbnxPayment" />
+        </route>
+    </router>
+</config>

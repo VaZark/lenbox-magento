@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column">
+    <body>
+        <referenceContainer name="content">
+            <block
+                    template="Lenbox_CbnxPayment::lenbox/callback.iframe.phtml"
+                    class="Lenbox\CbnxPayment\Block\Success"
+                    name="lenbox.success.callback"/>
+        </referenceContainer>
+
+        <referenceContainer name="header.container" remove="true" />
+        <referenceContainer name="footer" remove="true" />
+        <referenceBlock name="copyright" remove="true"/>
+    </body>
+</page>

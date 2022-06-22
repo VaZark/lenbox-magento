@@ -1,0 +1,22 @@
+{
+  "name": "lenbox/cbnx-payment",
+  "description": "Magento extension for Lenbox cbnx payments integration",
+  "type": "magento2-module",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://repo.magento.com/"
+    }
+  ],
+  "require": {
+    "magento/framework": ">=101.0.0"    
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Lenbox\\CbnxPayment\\": ""
+    }
+  }
+}

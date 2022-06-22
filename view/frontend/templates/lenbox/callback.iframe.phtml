@@ -1,0 +1,40 @@
+<?php
+/**
+ * @var \Lenbox\CbnxPayment\Block\Success $this
+ */
+
+
+/** @var \Lenbox\CbnxPayment\Helper\Data $lenboxHelper */
+$lenboxHelper = $this->getHelper();
+
+/** @var \Magento\Sales\Model\Order $order */
+$order = $this->getOrder();
+
+$isSecure = $lenboxHelper->isCurrentlySecure();
+?>
+
+<div class="callback-iframe-content">
+    <?php if($lenboxHelper->getMessageIframeCallback()): ?>
+        <?php echo $lenboxHelper->getMessageIframeCallback();?>
+    <?php else: ?>
+        <p>Seu pedido foi aprovado.<br/>Confira os detalhes do seu pedido a seguir ...</p>
+
+        <?php if($order && $order->getId()): ?>
+            <script type="text/javascript">
+                setTimeout(function () {
+                    window.top.location.href = '<?php echo $this->getUrl("sales/order/view", array('order_id' => $order->getId(), '_secure' => $isSecure)); ?>';
+                }, 2500);
+            </script>
+        <?php endif ?>
+    <?php endif; ?>
+</div>
+<style>
+    .callback-iframe-content {
+        padding: 100px 20px;
+        font-size: 16px;
+        text-align: center;
+    }
+    .callback-iframe-content * {
+        text-align: center;
+    }
+</style>
