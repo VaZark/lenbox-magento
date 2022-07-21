@@ -19,8 +19,7 @@ class CaptureRequest implements BuilderInterface
      */
     public function __construct(
         ConfigInterface $config
-    )
-    {
+    ) {
         $this->config = $config;
     }
 
@@ -32,7 +31,11 @@ class CaptureRequest implements BuilderInterface
      */
     public function build(array $buildSubject)
     {
-        if (!isset($buildSubject['payment'])
+
+        error_log('Loading CaptureRequest', 3,  '/bitnami/magento/var/log/custom_error.log');
+        error_log(json_encode($buildSubject), 3,  '/bitnami/magento/var/log/custom_error.log');
+        if (
+            !isset($buildSubject['payment'])
             || !$buildSubject['payment'] instanceof PaymentDataObjectInterface
         ) {
             throw new \InvalidArgumentException('Payment data object should be provided');
@@ -40,7 +43,16 @@ class CaptureRequest implements BuilderInterface
         /** @var PaymentDataObjectInterface $paymentDO */
         $paymentDO = $buildSubject['payment'];
         $order = $paymentDO->getOrder();
+
+
+        error_log('Order in CaptureRequest', 3,  '/bitnami/magento/var/log/custom_error.log');
+        error_log(json_encode($order), 3,  '/bitnami/magento/var/log/custom_error.log');
+
         $payment = $paymentDO->getPayment();
+
+        error_log('payment in CaptureRequest', 3,  '/bitnami/magento/var/log/custom_error.log');
+        error_log(json_encode($payment), 3,  '/bitnami/magento/var/log/custom_error.log');
+
         if (!$payment instanceof OrderPaymentInterface) {
             throw new \LogicException('Order payment should be provided.');
         }

@@ -58,7 +58,8 @@ class AuthorizationRequest implements BuilderInterface
      */
     public function build(array $buildSubject)
     {
-        if (!isset($buildSubject['payment'])
+        if (
+            !isset($buildSubject['payment'])
             || !$buildSubject['payment'] instanceof PaymentDataObjectInterface
         ) {
             throw new \InvalidArgumentException('Payment data object should be provided');
@@ -83,15 +84,16 @@ class AuthorizationRequest implements BuilderInterface
         $orderId = $order->getId();
 
         return [
-            'TXN_TYPE'      => 'A',
-            'referenceId'   => $incrementId,
-            'callbackUrl'   => $this->lenbox->getCallbackUrl(),
-            'returnUrl'     => $this->lenbox->getReturnUrl($orderId),
-            'value'         => round($order->getGrandTotalAmount(), 2),
-            'buyer'         => $this->lenbox->getBuyer($order, $quote),
-            'plugin'        => "Magento 2". $version,
-            'api_url'       => $this->lenbox->getApiUrl("/payments"),
-            'expiresAt'     => $expiresAt
+            "authkey" => "1575548537269x551789111684887000",
+            "vd" => "1575548961850x942705562301413600",
+            "montant" => 773.93,
+            "productid" => 6,
+            "notification" => "http://localhost:8080/index.php?fc=module&module=lenboxpresta&controller=validation&productid=6",
+            "retour" => "http://localhost:8080/index.php?fc=module&module=lenboxpresta&controller=api&productid=6",
+            "cancellink" => "http://localhost:8080/index.php?controller=order&step=1",
+            "failurelink" => "http://localhost:8080/index.php?controller=order&step=1",
+            "integration" => "magento2",
+            "paymentoptions" => array("FLOA_3XG", "3XP", "FLOA_10XP"),
         ];
     }
 }
