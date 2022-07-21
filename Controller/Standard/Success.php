@@ -8,6 +8,9 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultInterface;
 use  Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Quote\Api\CartManagementInterface;
+use Magento\Quote\Model\QuoteFactory;
+use Magento\Sales\Model\Order;
 
 class Success extends Action
 {
@@ -22,11 +25,15 @@ class Success extends Action
         RequestInterface $request,
         Context $context,
         JsonFactory $resultJsonFactory,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        CartManagementInterface $quoteManagement,
+        QuoteFactory $quoteFactory,
     ) {
         $this->request = $request;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->orderRepository = $orderRepository;
+        $this->quoteManagement = $quoteManagement;
+        $this->quoteFactory = $quoteFactory;
         parent::__construct($context);
     }
 
@@ -44,23 +51,28 @@ class Success extends Action
             'action_details' => null,
         ];
 
-        $orderId = $this->request->getParam('product_id');
-        error_log("Fetched productID from URL " . json_encode($orderId), 3, "/bitnami/magento/var/log/custom_error.log");
+        $product_id = $this->request->getParam('product_id');
+        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
 
-        $order = $this->orderRepository->get($orderId);
+        // TODO : 
+        // 1. Check Lenbox order
+        // 2. Invoke getformstatus
+
+        $quote = $this->quoteFactory->create()->load($product_id);
+        $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
         $payment = $order->getPayment();
         $amount = $payment->getAmountOrdered() ?? null;
-        error_log("Payment obj " . json_encode($amount), 3, "/bitnami/magento/var/log/custom_error.log");
-
         $payment->registerAuthorizationNotification($amount);
         $payment->registerCaptureNotification($amount);
+        $order->setStatus(Order::STATE_PROCESSING);
+        $order->setState(Order::STATE_PROCESSING);
+        $order->save();
 
-
-        $result = $this->resultJsonFactory->create();
 
         $data['has_error'] = false;
         $data['status'] = "SUCCESS";
 
+        $result = $this->resultJsonFactory->create();
         return $result->setData($data);
     }
 }
