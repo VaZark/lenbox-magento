@@ -2,31 +2,65 @@
 
 namespace Lenbox\CbnxPayment\Controller\Standard;
 
-class Success extends \Magento\Framework\App\Action\Action
-{
-    protected $_pageFactory;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
+use  Magento\Sales\Api\OrderRepositoryInterface;
 
+class Success extends Action
+{
     /**
-     * Constructor
-     *
-     * @param \Magento\Framework\App\Action\Context  $context
-     * @param \Magento\Framework\View\Result\PageFactory  $pageFactory
+     * @var JsonFactory
      */
+    protected $resultJsonFactory;
+    protected $_pageFactory;
+    protected $orderRepository;
+
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Framework\View\Result\PageFactory $pageFactory
+        RequestInterface $request,
+        Context $context,
+        JsonFactory $resultJsonFactory,
+        OrderRepositoryInterface $orderRepository
     ) {
-        $this->_pageFactory = $pageFactory;
+        $this->request = $request;
+        $this->resultJsonFactory = $resultJsonFactory;
+        $this->orderRepository = $orderRepository;
         parent::__construct($context);
     }
 
     /**
-     * Cria o manifesto com base nas configurações
-     *
-     * @return \Magento\Framework\Controller\ResultInterface
+     * View  page action
+     * @return ResultInterface
      */
     public function execute()
     {
-        return $this->_pageFactory->create();
+
+        $data = [
+            'has_error'      => null,
+            'err_msg'        => null,
+            'status'         => null,
+            'action_details' => null,
+        ];
+
+        $orderId = $this->request->getParam('product_id');
+        error_log("Fetched productID from URL " . json_encode($orderId), 3, "/bitnami/magento/var/log/custom_error.log");
+
+        $order = $this->orderRepository->get($orderId);
+        $payment = $order->getPayment();
+        $amount = $payment->getAmountOrdered() ?? null;
+        error_log("Payment obj " . json_encode($amount), 3, "/bitnami/magento/var/log/custom_error.log");
+
+        $payment->registerAuthorizationNotification($amount);
+        $payment->registerCaptureNotification($amount);
+
+
+        $result = $this->resultJsonFactory->create();
+
+        $data['has_error'] = false;
+        $data['status'] = "SUCCESS";
+
+        return $result->setData($data);
     }
 }
