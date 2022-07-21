@@ -26,8 +26,7 @@ class TransferFactory implements TransferFactoryInterface
     public function __construct(
         TransferBuilder $transferBuilder,
         Lenbox $lenbox
-    )
-    {
+    ) {
         $this->transferBuilder = $transferBuilder;
         $this->lenbox = $lenbox;
     }
@@ -40,14 +39,17 @@ class TransferFactory implements TransferFactoryInterface
      */
     public function create(array $request)
     {
-        $apiUrl = $request['api_url'];
-        unset($request['api_url']);
+        error_log('triggering create transfer', 3,  '/bitnami/magento/var/log/custom_error.log');
+        error_log(json_encode($request), 3,  '/bitnami/magento/var/log/custom_error.log');
+
+        // $apiUrl = $request['api_url'];
+        // unset($request['api_url']);
+        $apiUrl = "https://app.finnocar.com/version-test/api/1.1/wf/getformsplit";
 
         return $this->transferBuilder
             ->setMethod(\Zend_Http_Client::POST)
             ->setHeaders(
                 [
-                    "x-lenbox-token: {$this->lenbox->getToken()}",
                     "cache-control: no-cache",
                     "content-type: application/json"
                 ]

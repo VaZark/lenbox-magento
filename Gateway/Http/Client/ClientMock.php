@@ -42,6 +42,9 @@ class ClientMock implements ClientInterface
      */
     public function placeRequest(TransferInterface $transferObject)
     {
+        error_log('triggering place req', 3,  '/bitnami/magento/var/log/custom_error.log');
+        error_log(json_encode($transferObject), 3,  '/bitnami/magento/var/log/custom_error.log');
+
         $log = [
             'request'       => $transferObject->getBody(),
             'request_uri'   => $transferObject->getUri(),
@@ -57,7 +60,7 @@ class ClientMock implements ClientInterface
                 $transferObject->getUri(),
                 $transferObject->getBody()
             );
-//            $result = ['success' => 1];
+            //            $result = ['success' => 1];
             $log['response'] = $result;
         } catch (Exception $e) {
             throw $e;

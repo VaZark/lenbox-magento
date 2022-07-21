@@ -35,7 +35,8 @@ class TxnIdHandler implements HandlerInterface
      */
     public function handle(array $handlingSubject, array $response)
     {
-        if (!isset($handlingSubject['payment'])
+        if (
+            !isset($handlingSubject['payment'])
             || !$handlingSubject['payment'] instanceof PaymentDataObjectInterface
         ) {
             throw new InvalidArgumentException('Payment data object should be provided');
@@ -48,13 +49,11 @@ class TxnIdHandler implements HandlerInterface
         $payment = $paymentDO->getPayment();
 
         $payment->setIsTransactionPending(true);
-        $payment->getOrder()->setCanSendNewEmailFlag(true);
+        // $payment->getOrder()->setCanSendNewEmailFlag(true);
 
         /** @var $payment \Magento\Sales\Model\Order\Payment */
-        $payment->setTransactionId($response['return']['referenceId']);
-        $payment->setIsTransactionClosed(false);
-        $payment->setAdditionalInformation('paymentUrl', $response['return']['paymentUrl']);
-        $payment->setAdditionalInformation('qrcode', $response['return']['qrcode']);
+        // $payment->setTransactionId($response['return']['referenceId']);
+        $payment->setAdditionalInformation('redirect_url', $response['return']['response']['url']);
     }
 
     /**
@@ -83,33 +82,12 @@ class TxnIdHandler implements HandlerInterface
 
     private function validateRequiredFields(array $response): void
     {
+        error_log('Response in TxnIdHandler', 3,  '/bitnami/magento/var/log/custom_error.log');
+        error_log(json_encode($response), 3,  '/bitnami/magento/var/log/custom_error.log');
+
         $errorMessage = $response['return']['message'] ?? null;
-
-        if ($response['success'] === 0) {
-            throw new InvalidArgumentException("Unexpected payment error. Details [$errorMessage]");
+        if ($response['return']['status'] !== "success") {
+            throw new InvalidArgumentException($errorMessage ?? 'Error from Lenbox');
         }
-
-        if (!$this->isValidStringField($response, 'referenceId')) {
-            throw new InvalidArgumentException($errorMessage ?? 'Resposta sem o campo referenceId');
-        }
-
-        if (!$this->isValidStringField($response, 'paymentUrl')) {
-            throw new InvalidArgumentException($errorMessage ?? 'Resposta sem o campo paymentUrl');
-        }
-
-        if (!isset($response['return']['qrcode']['content'])) {
-            throw new InvalidArgumentException($errorMessage ?? 'Resposta sem o campo qrcode.content');
-        }
-
-        if (!isset($response['return']['qrcode']['base64'])) {
-            throw new InvalidArgumentException($errorMessage ?? 'Resposta sem o campo qrcode.base64');
-        }
-    }
-
-    private function isValidStringField(array $response, string $field): bool
-    {
-        return isset($response['return'][$field])
-            && is_string($response['return'][$field])
-            && strlen(trim($response['return'][$field])) > 0;
     }
 }

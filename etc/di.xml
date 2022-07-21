@@ -46,7 +46,7 @@
                 <item name="authorize" xsi:type="string">LenboxStandardAuthorizeCommand</item>
                 <item name="capture" xsi:type="string">Lenbox\CbnxPayment\Gateway\Command\DoNothingCommand</item>
                 <item name="void" xsi:type="string">LenboxStandardVoidCommand</item>
-                <item name="refund" xsi:type="string">LenboxStandarRefundCommand</item>
+                <!-- <item name="refund" xsi:type="string">LenboxStandarRefundCommand</item> -->
                 <item name="cancel" xsi:type="string">LenboxStandardVoidCommand</item>
             </argument>
         </arguments>

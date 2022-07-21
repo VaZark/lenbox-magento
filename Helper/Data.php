@@ -28,7 +28,7 @@ use Psr\Log\LoggerInterface;
 
 class Data extends AbstractHelper
 {
-    const API_URL = "https://appws.lenbox.com/ecommerce/public";
+    const API_URL = "https://app.finnocar.com/version-test/api/1.1/wf/";
     const MODULE_NAME = "Lenbox_CbnxPayment";
     const ONPAGE_MODE = 1;
     const IFRAME_MODE = 2;
@@ -326,7 +326,7 @@ class Data extends AbstractHelper
     public function getVersion()
     {
         return " - v" . $this->moduleList
-                ->getOne(self::MODULE_NAME)['setup_version'];
+            ->getOne(self::MODULE_NAME)['setup_version'];
     }
 
     /**
@@ -537,7 +537,8 @@ class Data extends AbstractHelper
             $this->log("JSON sent to Lenbox API. URL: " . $url);
             $this->log((is_array($fields) ? \json_encode($fields) : $fields));
 
-            $this->curl->write($type,
+            $this->curl->write(
+                $type,
                 $url,
                 $http_ver = '1.1',
                 $headers,
@@ -563,10 +564,10 @@ class Data extends AbstractHelper
                     'return' => \json_decode(trim($response), true)
                 );
             }
-//            return array (
-//                'success' => 1,
-//                'return' => []
-//            );
+            //            return array (
+            //                'success' => 1,
+            //                'return' => []
+            //            );
         } catch (Exception $e) {
             $this->log("ERROR on requesting API: " . $e->getMessage());
             $this->logger->critical($e);
@@ -641,7 +642,8 @@ class Data extends AbstractHelper
      * @return string
      */
 
-    private function _formatTaxVat($taxvat){
+    private function _formatTaxVat($taxvat)
+    {
         $formatado = substr($taxvat, 0, 3) . '.';
         $formatado .= substr($taxvat, 3, 3) . '.';
         $formatado .= substr($taxvat, 6, 3) . '-';
@@ -787,7 +789,6 @@ class Data extends AbstractHelper
 
             $creditMemo->setInvoice($invoiceObj);
             $this->creditmemoService->refund($creditMemo);
-
         }
         $order->save();
     }
