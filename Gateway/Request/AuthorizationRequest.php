@@ -74,8 +74,9 @@ class AuthorizationRequest implements BuilderInterface
         $expiresAt = $this->lenbox->getExpiresAt($order);
         $incrementId = $order->getOrderIncrementId();
 
-        /** @var \Magento\Quote\Model\Quote $quote */
-        $quote = $this->session->getQuote();
+        /** @var \Magento\Quote\Model\Quote $quote ID */
+        $cartID = $this->session->getQuote()->getId();
+
 
         /**
          * @todo pegar
@@ -83,17 +84,28 @@ class AuthorizationRequest implements BuilderInterface
          */
         $orderId = $order->getId();
 
+        error_log('Cart ID' . json_encode($cartID), 3,  '/bitnami/magento/var/log/custom_error.log');
+
+        // TODO : Fetch from settings
+        $base_url = "http://localhost";
+        $authkey = "1575548537269x551789111684887000";
+        $client_id = "1575548961850x942705562301413600";
+        $selected_options = array("FLOA_3XG", "3XP", "FLOA_10XP");
+
+        $total = round($order->getGrandTotalAmount(), 2);
+
+
         return [
-            "authkey" => "1575548537269x551789111684887000",
-            "vd" => "1575548961850x942705562301413600",
-            "montant" => 773.93,
-            "productid" => 6,
-            "notification" => "http://localhost:8080/index.php?fc=module&module=lenboxpresta&controller=validation&productid=6",
-            "retour" => "http://localhost:8080/index.php?fc=module&module=lenboxpresta&controller=api&productid=6",
-            "cancellink" => "http://localhost:8080/index.php?controller=order&step=1",
-            "failurelink" => "http://localhost:8080/index.php?controller=order&step=1",
+            "authkey" => $authkey,
+            "vd" => $client_id,
+            "montant" => $total,
+            "productid" => $cartID,
+            "notification" => $base_url . "/lenbox/standard/validation?product_id=" . $cartID,
+            "retour" => $base_url . "/lenbox/standard/success?product_id=" . $cartID,
+            "cancellink" => $base_url . "/checkout/cart",
+            "failurelink" => $base_url . "/checkout/cart",
             "integration" => "magento2",
-            "paymentoptions" => array("FLOA_3XG", "3XP", "FLOA_10XP"),
+            "paymentoptions" => $selected_options,
         ];
     }
 }
