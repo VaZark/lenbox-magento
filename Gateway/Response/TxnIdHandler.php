@@ -53,7 +53,7 @@ class TxnIdHandler implements HandlerInterface
 
         /** @var $payment \Magento\Sales\Model\Order\Payment */
         // $payment->setTransactionId($response['return']['referenceId']);
-        $payment->setIsTransactionClosed(false);
+        $payment->setAdditionalInformation('redirect_url', $response['return']['response']['url']);
     }
 
     /**
