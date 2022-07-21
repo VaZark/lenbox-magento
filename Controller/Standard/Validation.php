@@ -23,6 +23,7 @@ class Validation extends Action
     protected $orderRepository;
 
     public function __construct(
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         RequestInterface $request,
         Context $context,
         JsonFactory $resultJsonFactory,
@@ -31,6 +32,7 @@ class Validation extends Action
         QuoteFactory $quoteFactory,
         Curl $curl,
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->request = $request;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->orderRepository = $orderRepository;
@@ -70,34 +72,37 @@ class Validation extends Action
     {
 
         $data = [
-            'has_error'      => null,
-            'err_msg'        => null,
-            'status'         => null,
-            'action_details' => null,
+            'client_id' => $this->scopeConfig->getValue('payment/lenbox_standard/test_client_id', \Magento\Store\Model\ScopeInterface::SCOPE_STORE)
         ];
+        // $data = [
+        //     'has_error'      => null,
+        //     'err_msg'        => null,
+        //     'status'         => null,
+        //     'action_details' => null,
+        // ];
 
-        $product_id = $this->request->getParam('product_id');
-        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
+        // $product_id = $this->request->getParam('product_id');
+        // error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
 
-        // TODO : 
-        // 1. Check if it is a Lenbox order
-        // 2. Avoid reordering
-        // 3. Retry for api call
-        $is_accepted = $this->callFormStatus($product_id);
-        if ($is_accepted) {
-            $quote = $this->quoteFactory->create()->load($product_id);
-            $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
-            $order->setStatus(Order::STATE_PROCESSING);
-            $order->setState(Order::STATE_PROCESSING);
-            $order->save();
-            $data['has_error'] = false;
-            $data['status'] = "SUCCESS";
-            $data['action_details'] = 'Created new order for the Quote ID ' . $product_id;
-        } else {
-            $data['has_error'] = false;
-            $data['status'] = "FAILED";
-            $data['action_details'] = 'Not Creating order due to rejection for the Quote ID ' . $product_id;
-        }
+        // // TODO : 
+        // // 1. Check if it is a Lenbox order
+        // // 2. Avoid reordering
+        // // 3. Retry for api call
+        // $is_accepted = $this->callFormStatus($product_id);
+        // if ($is_accepted) {
+        //     $quote = $this->quoteFactory->create()->load($product_id);
+        //     $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
+        //     $order->setStatus(Order::STATE_PROCESSING);
+        //     $order->setState(Order::STATE_PROCESSING);
+        //     $order->save();
+        //     $data['has_error'] = false;
+        //     $data['status'] = "SUCCESS";
+        //     $data['action_details'] = 'Created new order for the Quote ID ' . $product_id;
+        // } else {
+        //     $data['has_error'] = false;
+        //     $data['status'] = "FAILED";
+        //     $data['action_details'] = 'Not Creating order due to rejection for the Quote ID ' . $product_id;
+        // }
 
         $result = $this->resultJsonFactory->create();
         return $result->setData($data);
