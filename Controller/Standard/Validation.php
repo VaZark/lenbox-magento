@@ -60,14 +60,35 @@ class Validation extends Action
         );
 
         $this->curl->addHeader("Content-Type", "application/json");
-        $this->curl->post($url, json_encode($params));
-        $result = $this->curl->getBody();
 
-        error_log("Fetched formstatus" . json_encode($result), 3, "/bitnami/magento/var/log/custom_error.log");
-        $response = json_decode($result, false);
+        $attempt = 0;
+        $http_success = false;
+        do {
+            try {
+                $attempt += 1;
+                $this->curl->post($url, json_encode($params));
+                $status_code = $this->curl->getStatus();
+                if ($status_code == 200) {
+                    $http_success = true;
+                    break;
+                }
+            } catch (\Throwable $th) {
+            }
+        } while ($attempt < 4);
+
+        // Connection error
+        if (!$http_success) {
+            $data['has_error'] = true;
+            $data['status'] = "CONNECTION_ERROR";
+            $data['action_details'] = "Error invoking getformstatus for productId " . $product_id;
+            return $data;
+        }
+
+        $response = json_decode($this->curl->getBody(), false);
 
         if ($response->status == "success") {
             if ($response->response->accepted) {
+                // Accepted by Lenbox
                 $quote = $this->quoteFactory->create()->load($product_id);
                 $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
                 $order->setStatus(Order::STATE_PROCESSING);
@@ -77,11 +98,13 @@ class Validation extends Action
                 $data['status'] = "SUCCESS";
                 $data['action_details'] = 'Created new order for the Quote ID ' . $product_id;
             } else {
+                // Rejected by Lenbox
                 $data['has_error'] = false;
                 $data['status'] = "FAILED";
                 $data['action_details'] = 'Not Creating order due to rejection for the Quote ID ' . $product_id;
             }
         } else {
+            // Unexpected Error (usually config errors)
             $data['has_error'] = true;
             $data['status'] = "ERROR";
             $data['action_details'] = $response->message ?? json_encode($response);
@@ -110,10 +133,10 @@ class Validation extends Action
         $is_valid_quote = boolval($quote->getId());
         // TODO : 
         // 1. Check if it is a Lenbox order
-        // 3. Avoid reordering
-        // 4. Retry for api call
+        // 2. Avoid reordering
 
         if (!$is_valid_quote) {
+            // Invalid input
             $data['has_error'] = true;
             $data['status'] = (!$product_id) ? 'MISSING_ID' : "INVALID_ID";
             $data['action_details'] = 'Invalid Quote ID ' . $product_id;
