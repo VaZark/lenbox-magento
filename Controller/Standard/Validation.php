@@ -43,7 +43,7 @@ class Validation extends Action
         parent::__construct($context);
     }
 
-    private function callFormStatus($product_id)
+    private function callFormStatus($data, $product_id)
     {
 
         $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
@@ -66,30 +66,6 @@ class Validation extends Action
         error_log("Fetched formstatus" . json_encode($result), 3, "/bitnami/magento/var/log/custom_error.log");
         $response = json_decode($result, false);
 
-        return $response;
-    }
-
-    /**
-     * View  page action
-     * @return ResultInterface
-     */
-    public function execute()
-    {
-        $data = [
-            'has_error'      => null,
-            'err_msg'        => null,
-            'status'         => null,
-            'action_details' => null,
-        ];
-
-        $product_id = $this->request->getParam('product_id');
-        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
-
-        // TODO : 
-        // 1. Check if it is a Lenbox order
-        // 2. Avoid reordering
-        // 3. Retry for api call
-        $response = $this->callFormStatus($product_id);
         if ($response->status == "success") {
             if ($response->response->accepted) {
                 $quote = $this->quoteFactory->create()->load($product_id);
@@ -109,6 +85,40 @@ class Validation extends Action
             $data['has_error'] = true;
             $data['status'] = "ERROR";
             $data['action_details'] = $response->message ?? json_encode($response);
+        }
+
+        return $data;
+    }
+
+    /**
+     * View  page action
+     * @return ResultInterface
+     */
+    public function execute()
+    {
+        $data = [
+            'has_error'      => null,
+            'err_msg'        => null,
+            'status'         => null,
+            'action_details' => null,
+        ];
+
+        $product_id = $this->request->getParam('product_id');
+        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
+
+        $quote = $this->quoteFactory->create()->load($product_id);
+        $is_valid_quote = boolval($quote->getId());
+        // TODO : 
+        // 1. Check if it is a Lenbox order
+        // 3. Avoid reordering
+        // 4. Retry for api call
+
+        if (!$is_valid_quote) {
+            $data['has_error'] = true;
+            $data['status'] = (!$product_id) ? 'MISSING_ID' : "INVALID_ID";
+            $data['action_details'] = 'Invalid Quote ID ' . $product_id;
+        } else {
+            $data = $this->callFormStatus($data, $product_id);
         }
 
         $result = $this->resultJsonFactory->create();
