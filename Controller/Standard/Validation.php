@@ -127,7 +127,7 @@ class Validation extends Action
         ];
 
         $product_id = $this->request->getParam('product_id');
-        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
+        // error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
 
         $quote = $this->quoteFactory->create()->load($product_id);
         $is_valid_quote = boolval($quote->getId());

@@ -8,6 +8,8 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 use Lenbox\CbnxPayment\Helper\Data as Lenbox;
 use Psr\Log\LoggerInterface;
 use Magento\Checkout\Model\Session;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class AuthorizationRequest implements BuilderInterface
 {
@@ -39,17 +41,53 @@ class AuthorizationRequest implements BuilderInterface
      * @param Session $session
      */
     public function __construct(
+        ScopeConfigInterface $scopeConfig,
         ConfigInterface $config,
         Lenbox $lenbox,
         LoggerInterface $logger,
         Session $session
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->logger = $logger;
         $this->config = $config;
         $this->lenbox = $lenbox;
         $this->session = $session;
     }
 
+    private function get_payment_options($total)
+    {
+        $payment_option_keys = array(
+            '3xg' => 'FLOA_3XG',
+            '3xp'  => 'FLOA_3XP',
+            '4xg' => 'FLOA_4XG',
+            '4xp' => 'FLOA_4XP',
+            '10xg' => 'FLOA_10XG',
+            '10xp' => 'FLOA_10XP',
+        );
+        $active_options = array();
+
+        foreach ($payment_option_keys as $key => $value) {
+            $base_settings_path = 'payment/lenbox_standard/lenbox_' . $key;
+            $is_enabled = $this->scopeConfig->getValue($base_settings_path . '/enable_' . $key, ScopeInterface::SCOPE_STORE);
+
+            if (!$is_enabled) {
+                continue;
+            }
+
+            $lower_bound = $this->scopeConfig->getValue($base_settings_path . '/min_' . $key, ScopeInterface::SCOPE_STORE);
+            $upper_bound = $this->scopeConfig->getValue($base_settings_path . '/max_' . $key, ScopeInterface::SCOPE_STORE);
+            // error_log("Lower Bound value " . json_encode($lower_bound), 3,  '/bitnami/magento/var/log/custom_error.log');
+            // error_log("Upper Bound value " . json_encode($upper_bound), 3,  '/bitnami/magento/var/log/custom_error.log');
+
+            $is_valid_lower = $lower_bound ? $lower_bound <= $total : true;
+            $is_valid_upper = $upper_bound ? $upper_bound >= $total : true;
+            if ($is_valid_upper && $is_valid_lower) {
+                array_push($active_options, $value);
+            }
+        }
+
+        return $active_options;
+    }
     /**
      * Builds ENV request
      *
@@ -68,34 +106,21 @@ class AuthorizationRequest implements BuilderInterface
         /** @var PaymentDataObjectInterface $payment */
         $payment = $buildSubject['payment'];
         $order   = $payment->getOrder();
-        $address = $order->getShippingAddress();
 
-        $version = $this->lenbox->getVersion();
-        $expiresAt = $this->lenbox->getExpiresAt($order);
-        $incrementId = $order->getOrderIncrementId();
+        // Fetching from settings
+        $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
+        $base_url = $use_test ?  "https://app.finnocar.com/version-test/api/1.1/wf" : "https://app.finnocar.com/api/1.1/wf";
+        $authkey_field = 'payment/lenbox_standard/' . ($use_test ? 'test_auth_key' : 'live_auth_key');
+        $clientid_field = 'payment/lenbox_standard/' . ($use_test ? 'test_client_id' : 'live_client_id');
+        $authkey =   $this->scopeConfig->getValue($authkey_field, ScopeInterface::SCOPE_STORE);
+        $client_id = $this->scopeConfig->getValue($clientid_field, ScopeInterface::SCOPE_STORE);
 
-        /** @var \Magento\Quote\Model\Quote $quote ID */
+        // Calcuated params
         $cartID = $this->session->getQuote()->getId();
-
-
-        /**
-         * @todo pegar
-         * order id
-         */
-        $orderId = $order->getId();
-
-        error_log('Cart ID' . json_encode($cartID), 3,  '/bitnami/magento/var/log/custom_error.log');
-
-        // TODO : Fetch from settings
-        $base_url = "http://localhost";
-        $authkey = "1575548537269x551789111684887000";
-        $client_id = "1575548961850x942705562301413600";
-        $selected_options = array("FLOA_3XG", "3XP", "FLOA_10XP");
-
         $total = round($order->getGrandTotalAmount(), 2);
+        $selected_options = $this->get_payment_options($total);
 
-
-        return [
+        $params = [
             "authkey" => $authkey,
             "vd" => $client_id,
             "montant" => $total,
@@ -107,5 +132,9 @@ class AuthorizationRequest implements BuilderInterface
             "integration" => "magento2",
             "paymentoptions" => $selected_options,
         ];
+
+        // error_log("Params for getFormSplit" . json_encode($params), 3, "/bitnami/magento/var/log/custom_error.log");
+
+        return $params;
     }
 }

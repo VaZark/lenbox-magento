@@ -82,8 +82,6 @@ class TxnIdHandler implements HandlerInterface
 
     private function validateRequiredFields(array $response): void
     {
-        error_log('Response in TxnIdHandler', 3,  '/bitnami/magento/var/log/custom_error.log');
-        error_log(json_encode($response), 3,  '/bitnami/magento/var/log/custom_error.log');
 
         $errorMessage = $response['return']['message'] ?? null;
         if ($response['return']['status'] !== "success") {
