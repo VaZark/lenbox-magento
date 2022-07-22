@@ -68,34 +68,24 @@ class AuthorizationRequest implements BuilderInterface
         /** @var PaymentDataObjectInterface $payment */
         $payment = $buildSubject['payment'];
         $order   = $payment->getOrder();
-        $address = $order->getShippingAddress();
 
-        $version = $this->lenbox->getVersion();
-        $expiresAt = $this->lenbox->getExpiresAt($order);
-        $incrementId = $order->getOrderIncrementId();
+        // Fetching from settings
+        $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
+        $base_url = $use_test ?  "https://app.finnocar.com/version-test/api/1.1/wf" : "https://app.finnocar.com/api/1.1/wf";
+        $authkey_field = 'payment/lenbox_standard/' . ($use_test ? 'test_auth_key' : 'live_auth_key');
+        $clientid_field = 'payment/lenbox_standard/' . ($use_test ? 'test_client_id' : 'live_client_id');
+        $authkey =   $this->scopeConfig->getValue($authkey_field, ScopeInterface::SCOPE_STORE);
+        $client_id = $this->scopeConfig->getValue($clientid_field, ScopeInterface::SCOPE_STORE);
 
         /** @var \Magento\Quote\Model\Quote $quote ID */
         $cartID = $this->session->getQuote()->getId();
 
-
-        /**
-         * @todo pegar
-         * order id
-         */
-        $orderId = $order->getId();
-
-        error_log('Cart ID' . json_encode($cartID), 3,  '/bitnami/magento/var/log/custom_error.log');
-
         // TODO : Fetch from settings
-        $base_url = "http://localhost";
-        $authkey = "1575548537269x551789111684887000";
-        $client_id = "1575548961850x942705562301413600";
         $selected_options = array("FLOA_3XG", "3XP", "FLOA_10XP");
 
         $total = round($order->getGrandTotalAmount(), 2);
 
-
-        return [
+        $params = [
             "authkey" => $authkey,
             "vd" => $client_id,
             "montant" => $total,
@@ -107,5 +97,9 @@ class AuthorizationRequest implements BuilderInterface
             "integration" => "magento2",
             "paymentoptions" => $selected_options,
         ];
+
+        error_log("Params for getFormSplit" . json_encode($params), 3, "/bitnami/magento/var/log/custom_error.log");
+
+        return $params;
     }
 }

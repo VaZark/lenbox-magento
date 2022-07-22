@@ -6,6 +6,8 @@ use Magento\Payment\Gateway\Http\TransferBuilder;
 use Magento\Payment\Gateway\Http\TransferFactoryInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Lenbox\CbnxPayment\Helper\Data as Lenbox;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class TransferFactory implements TransferFactoryInterface
 {
@@ -24,9 +26,11 @@ class TransferFactory implements TransferFactoryInterface
      * @param Lenbox $lenbox
      */
     public function __construct(
+        ScopeConfigInterface $scopeConfig,
         TransferBuilder $transferBuilder,
         Lenbox $lenbox
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->transferBuilder = $transferBuilder;
         $this->lenbox = $lenbox;
     }
@@ -44,7 +48,11 @@ class TransferFactory implements TransferFactoryInterface
 
         // $apiUrl = $request['api_url'];
         // unset($request['api_url']);
-        $apiUrl = "https://app.finnocar.com/version-test/api/1.1/wf/getformsplit";
+
+
+        $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
+        $base_url = $use_test ?  "https://app.finnocar.com/version-test/api/1.1/wf" : "https://app.finnocar.com/api/1.1/wf";
+        $apiUrl = $base_url . "/getformsplit";
 
         return $this->transferBuilder
             ->setMethod(\Zend_Http_Client::POST)
