@@ -10,6 +10,7 @@ use Magento\Framework\Controller\ResultInterface;
 use  Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Model\QuoteFactory;
+use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\HTTP\Client\Curl;
