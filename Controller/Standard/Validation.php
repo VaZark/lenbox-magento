@@ -10,7 +10,8 @@ use Magento\Framework\Controller\ResultInterface;
 use  Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Model\QuoteFactory;
-use Magento\Sales\Model\Order;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\HTTP\Client\Curl;
 
 class Validation extends Action
@@ -23,6 +24,7 @@ class Validation extends Action
     protected $orderRepository;
 
     public function __construct(
+        ScopeConfigInterface $scopeConfig,
         RequestInterface $request,
         Context $context,
         JsonFactory $resultJsonFactory,
@@ -31,6 +33,7 @@ class Validation extends Action
         QuoteFactory $quoteFactory,
         Curl $curl,
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->request = $request;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->orderRepository = $orderRepository;
@@ -40,26 +43,74 @@ class Validation extends Action
         parent::__construct($context);
     }
 
-    private function callFormStatus($product_id)
+    private function callFormStatus($data, $product_id)
     {
-        // TODO : Fetch from settings
-        $base_url = "https://app.finnocar.com/version-test/api/1.1/wf";
-        $url = $base_url . "/getformstatus";
-        $authkey = "1575548537269x551789111684887000";
-        $client_id = "1575548961850x942705562301413600";
 
+        $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
+
+        $authkey_field = 'payment/lenbox_standard/' . ($use_test ? 'test_auth_key' : 'live_auth_key');
+        $clientid_field = 'payment/lenbox_standard/' . ($use_test ? 'test_client_id' : 'live_client_id');
+        $base_url = $use_test ?  "https://app.finnocar.com/version-test/api/1.1/wf" : "https://app.finnocar.com/api/1.1/wf";
+        $url = $base_url . "/getformstatus";
+
+        $params = array(
+            'vd' => $this->scopeConfig->getValue($clientid_field, ScopeInterface::SCOPE_STORE),
+            'authkey' => $this->scopeConfig->getValue($authkey_field, ScopeInterface::SCOPE_STORE),
+            'productId' => $product_id,
+        );
 
         $this->curl->addHeader("Content-Type", "application/json");
-        $params = array(
-            "authkey" => $authkey,
-            "vd" => $client_id,
-            "productId" => 43,
-        );
-        $this->curl->post($url, json_encode($params));
-        $result = $this->curl->getBody();
-        error_log("Fetched formstatus" . json_encode($result), 3, "/bitnami/magento/var/log/custom_error.log");
-        $response = json_decode($result, false);
-        return $response->response->accepted;
+
+        $attempt = 0;
+        $http_success = false;
+        do {
+            try {
+                $attempt += 1;
+                $this->curl->post($url, json_encode($params));
+                $status_code = $this->curl->getStatus();
+                if ($status_code == 200) {
+                    $http_success = true;
+                    break;
+                }
+            } catch (\Throwable $th) {
+            }
+        } while ($attempt < 4);
+
+        // Connection error
+        if (!$http_success) {
+            $data['has_error'] = true;
+            $data['status'] = "CONNECTION_ERROR";
+            $data['action_details'] = "Error invoking getformstatus for productId " . $product_id;
+            return $data;
+        }
+
+        $response = json_decode($this->curl->getBody(), false);
+
+        if ($response->status == "success") {
+            if ($response->response->accepted) {
+                // Accepted by Lenbox
+                $quote = $this->quoteFactory->create()->load($product_id);
+                $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
+                $order->setStatus(Order::STATE_PROCESSING);
+                $order->setState(Order::STATE_PROCESSING);
+                $order->save();
+                $data['has_error'] = false;
+                $data['status'] = "SUCCESS";
+                $data['action_details'] = 'Created new order for the Quote ID ' . $product_id;
+            } else {
+                // Rejected by Lenbox
+                $data['has_error'] = false;
+                $data['status'] = "FAILED";
+                $data['action_details'] = 'Not Creating order due to rejection for the Quote ID ' . $product_id;
+            }
+        } else {
+            // Unexpected Error (usually config errors)
+            $data['has_error'] = true;
+            $data['status'] = "ERROR";
+            $data['action_details'] = $response->message ?? json_encode($response);
+        }
+
+        return $data;
     }
 
     /**
@@ -68,7 +119,6 @@ class Validation extends Action
      */
     public function execute()
     {
-
         $data = [
             'has_error'      => null,
             'err_msg'        => null,
@@ -79,24 +129,19 @@ class Validation extends Action
         $product_id = $this->request->getParam('product_id');
         error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
 
+        $quote = $this->quoteFactory->create()->load($product_id);
+        $is_valid_quote = boolval($quote->getId());
         // TODO : 
         // 1. Check if it is a Lenbox order
         // 2. Avoid reordering
-        // 3. Retry for api call
-        $is_accepted = $this->callFormStatus($product_id);
-        if ($is_accepted) {
-            $quote = $this->quoteFactory->create()->load($product_id);
-            $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
-            $order->setStatus(Order::STATE_PROCESSING);
-            $order->setState(Order::STATE_PROCESSING);
-            $order->save();
-            $data['has_error'] = false;
-            $data['status'] = "SUCCESS";
-            $data['action_details'] = 'Created new order for the Quote ID ' . $product_id;
+
+        if (!$is_valid_quote) {
+            // Invalid input
+            $data['has_error'] = true;
+            $data['status'] = (!$product_id) ? 'MISSING_ID' : "INVALID_ID";
+            $data['action_details'] = 'Invalid Quote ID ' . $product_id;
         } else {
-            $data['has_error'] = false;
-            $data['status'] = "FAILED";
-            $data['action_details'] = 'Not Creating order due to rejection for the Quote ID ' . $product_id;
+            $data = $this->callFormStatus($data, $product_id);
         }
 
         $result = $this->resultJsonFactory->create();
