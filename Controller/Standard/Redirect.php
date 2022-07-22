@@ -36,14 +36,9 @@ class Redirect extends \Magento\Framework\App\Action\Action
         /** @var Order $order */
         $order = $this->getOrder();
         $payment = $order->getPayment();
-
-        error_log('after payment in redirect', 3,  '/bitnami/magento/var/log/custom_error.log');
-        error_log(json_encode($payment), 3,  '/bitnami/magento/var/log/custom_error.log');
-
         if ($payment && $payment->getAdditionalInformation("redirect_url")) {
             $resultRedirect = $this->resultRedirectFactory->create();
             $resultRedirect->setPath($payment->getAdditionalInformation("redirect_url"));
-            error_log('Redirecting to ' . json_encode($resultRedirect), 3,  '/bitnami/magento/var/log/custom_error.log');
             // $payment->setIsTransactionClosed(false);
             // $payment->setIsTransactionPending(true);
             return $resultRedirect;

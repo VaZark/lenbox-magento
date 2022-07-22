@@ -43,12 +43,8 @@ class TransferFactory implements TransferFactoryInterface
      */
     public function create(array $request)
     {
-        error_log('triggering create transfer', 3,  '/bitnami/magento/var/log/custom_error.log');
-        error_log(json_encode($request), 3,  '/bitnami/magento/var/log/custom_error.log');
-
         // $apiUrl = $request['api_url'];
         // unset($request['api_url']);
-
 
         $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
         $base_url = $use_test ?  "https://app.finnocar.com/version-test/api/1.1/wf" : "https://app.finnocar.com/api/1.1/wf";
