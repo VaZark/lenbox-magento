@@ -5,21 +5,20 @@
             <lenbox_standard>
                 <active>0</active>
                 <model>LenboxStandardFacade</model>
-                <title>Lenbox</title>
+                <title>Lenbox CBNX</title>
                 <test_mode>1</test_mode>
                 <test_client_id>1575548961850x942705562301413600</test_client_id>
                 <test_auth_key>1575548537269x551789111684887000</test_auth_key>
                 <live_client_id></live_client_id>
                 <live_auth_key></live_auth_key>
-                <can_initialize>1</can_initialize>
+                <is_gateway>1</is_gateway>
+                <payment_action>authorize</payment_action>
                 <can_authorize>1</can_authorize>
-                <can_capture>1</can_capture>
+                <can_capture>0</can_capture>
                 <can_void>1</can_void>
                 <can_cancel>1</can_cancel>
                 <can_refund>0</can_refund>
                 <can_use_checkout>1</can_use_checkout>
-                <is_gateway>1</is_gateway>
-                <payment_action>authorize</payment_action>
                 
                 <lenbox_3xg>
                     <enable_3xg>1</enable_3xg>
