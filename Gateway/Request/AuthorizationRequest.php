@@ -129,7 +129,7 @@ class AuthorizationRequest implements BuilderInterface
             "montant" => $total,
             "productid" => $cartID,
             "notification" => $base_url . "lenbox/standard/validation?product_id=" . $cartID,
-            "retour" => $base_url . "lenbox/standard/success?product_id=" . $cartID,
+            "retour" => $base_url . "lenbox/standard/success/" . $cartID,
             "cancellink" => $base_url . "checkout/cart",
             "failurelink" => $base_url . "checkout/cart",
             "integration" => "magento2",
