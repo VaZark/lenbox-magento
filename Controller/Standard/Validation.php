@@ -14,6 +14,7 @@ use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\HTTP\Client\Curl;
+use Magento\Sales\Model\ResourceModel\Sale\Collection;
 
 class Validation extends Action
 {
@@ -33,6 +34,7 @@ class Validation extends Action
         CartManagementInterface $quoteManagement,
         QuoteFactory $quoteFactory,
         Curl $curl,
+        Collection $salesorder,
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->request = $request;
@@ -41,11 +43,28 @@ class Validation extends Action
         $this->quoteManagement = $quoteManagement;
         $this->quoteFactory = $quoteFactory;
         $this->curl = $curl;
+        $this->salesorder = $salesorder;
         parent::__construct($context);
     }
 
     private function callFormStatus($data, $product_id)
     {
+
+        try {
+            $orderObjArr = $this->salesorder->addFieldToFilter('quote_id', $product_id)->getData();
+            if (count($orderObjArr) != 1) {
+                $data['has_error'] = true;
+                $data['status'] = 'NO_PERFECT_MATCH';
+                $data['action_details'] = 'There exists multiple orders for the Quote ID ' . $product_id;*
+                return $data;
+            }
+            $order_id = $orderObjArr[0]['entity_id'];
+        } catch (\Throwable $th) {
+            $data['has_error'] = true;
+            $data['status'] = 'MISSING_ORDER';
+            $data['action_details'] = 'Order does not exist for Quote ID ' . $product_id;
+            return $data;
+        }
 
         $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
 
@@ -89,8 +108,6 @@ class Validation extends Action
 
         if ($response->status == "success") {
             if ($response->response->accepted) {
-                // Accepted by Lenbox
-                $order_id = $this->quoteManagement->placeOrder($product_id); // creates new order with cart ID
                 $order = $this->orderRepository->get($order_id);
                 $order->setStatus(Order::STATE_PROCESSING);
                 $order->setState(Order::STATE_PROCESSING);
