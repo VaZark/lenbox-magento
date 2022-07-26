@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 class AuthorizationRequest implements BuilderInterface
 {
@@ -42,12 +43,14 @@ class AuthorizationRequest implements BuilderInterface
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
+        StoreManagerInterface $storeManager,
         ConfigInterface $config,
         Lenbox $lenbox,
         LoggerInterface $logger,
         Session $session
     ) {
         $this->scopeConfig = $scopeConfig;
+        $this->storeManager = $storeManager;
         $this->logger = $logger;
         $this->config = $config;
         $this->lenbox = $lenbox;
@@ -108,8 +111,8 @@ class AuthorizationRequest implements BuilderInterface
         $order   = $payment->getOrder();
 
         // Fetching from settings
+        $base_url = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB);
         $use_test = $this->scopeConfig->getValue('payment/lenbox_standard/test_mode', ScopeInterface::SCOPE_STORE);
-        $base_url = $use_test ?  "https://app.finnocar.com/version-test/api/1.1/wf" : "https://app.finnocar.com/api/1.1/wf";
         $authkey_field = 'payment/lenbox_standard/' . ($use_test ? 'test_auth_key' : 'live_auth_key');
         $clientid_field = 'payment/lenbox_standard/' . ($use_test ? 'test_client_id' : 'live_client_id');
         $authkey =   $this->scopeConfig->getValue($authkey_field, ScopeInterface::SCOPE_STORE);
@@ -125,10 +128,10 @@ class AuthorizationRequest implements BuilderInterface
             "vd" => $client_id,
             "montant" => $total,
             "productid" => $cartID,
-            "notification" => $base_url . "/lenbox/standard/validation?product_id=" . $cartID,
-            "retour" => $base_url . "/lenbox/standard/success?product_id=" . $cartID,
-            "cancellink" => $base_url . "/checkout/cart",
-            "failurelink" => $base_url . "/checkout/cart",
+            "notification" => $base_url . "lenbox/standard/validation?product_id=" . $cartID,
+            "retour" => $base_url . "lenbox/standard/success?product_id=" . $cartID,
+            "cancellink" => $base_url . "checkout/cart",
+            "failurelink" => $base_url . "checkout/cart",
             "integration" => "magento2",
             "paymentoptions" => $selected_options,
         ];

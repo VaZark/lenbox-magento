@@ -90,8 +90,8 @@ class Validation extends Action
         if ($response->status == "success") {
             if ($response->response->accepted) {
                 // Accepted by Lenbox
-                $quote = $this->quoteFactory->create()->load($product_id);
-                $order = $this->quoteManagement->submit($quote); // creates new order with quote obj
+                $order_id = $this->quoteManagement->placeOrder($product_id); // creates new order with cart ID
+                $order = $this->orderRepository->get($order_id);
                 $order->setStatus(Order::STATE_PROCESSING);
                 $order->setState(Order::STATE_PROCESSING);
                 $order->save();
