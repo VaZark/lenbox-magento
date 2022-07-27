@@ -74,10 +74,10 @@ class Failed extends \Magento\Framework\App\Action\Action
         foreach ($orderObjArr as $orderObj) {
             $order_id = $orderObj['entity_id'];
             $order = $this->orderRepository->get($order_id);
-            // If not in canceled state or Lenbox Order skip changing order state
+            // If not in review state or is not a Lenbox Order skip changing order state
             $order_state = $order->getState();
             $methodTitle = $order->getPayment()->getMethodInstance()->getTitle();
-            if ($order_state == Order::STATE_CANCELED || $methodTitle != "Lenbox CBNX") {
+            if ($order_state != Order::STATE_PAYMENT_REVIEW || $methodTitle != "Lenbox CBNX") {
                 continue;
             }
             $order->setStatus(Order::STATE_CANCELED);
