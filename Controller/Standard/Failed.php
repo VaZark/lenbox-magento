@@ -52,12 +52,32 @@ class Failed extends \Magento\Framework\App\Action\Action
     {
 
         $quote_id = $this->request->getParam('product_id');
+        $cleared_order = false;
         try {
+
+            $orderObjArr = $this->salesorder->addFieldToFilter('quote_id', $quote_id)->getData();
+            // Cancel orders for same quote with multiple attempts
+            foreach ($orderObjArr as $orderObj) {
+                $order_id = $orderObj['entity_id'];
+                $order = $this->orderRepository->get($order_id);
+                // If not in review state or is not a Lenbox Order skip changing order state
+                $order_state = $order->getState();
+                $methodTitle = $order->getPayment()->getMethodInstance()->getTitle();
+                if ($order_state != Order::STATE_PAYMENT_REVIEW || $methodTitle != "Lenbox CBNX") {
+                    continue;
+                }
+                $order->setStatus(Order::STATE_CANCELED);
+                $order->setState(Order::STATE_CANCELED);
+                $order->save();
+                $cleared_order = true;
+            }
+
             // Reactive old quote
-            $quote = $this->quoteFactory->create()->load($quote_id);
-            $quote->setIsActive(1)->setReservedOrderId(null);
-            $this->quoteRepository->save($quote);
-            $this->close_old_order($quote_id);
+            if ($cleared_order) {
+                $quote = $this->quoteFactory->create()->load($quote_id);
+                $quote->setIsActive(1)->setReservedOrderId(null);
+                $this->quoteRepository->save($quote);
+            }
         } catch (\Exception $e) {
             $this->messageManager->addError("Error reloading cart");
         }
@@ -65,24 +85,5 @@ class Failed extends \Magento\Framework\App\Action\Action
         $redirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         $redirect->setUrl('/checkout');
         return $redirect;
-    }
-
-    private function close_old_order($quote_id)
-    {
-        $orderObjArr = $this->salesorder->addFieldToFilter('quote_id', $quote_id)->getData();
-        // Cancel orders for same quote with multiple attempts
-        foreach ($orderObjArr as $orderObj) {
-            $order_id = $orderObj['entity_id'];
-            $order = $this->orderRepository->get($order_id);
-            // If not in review state or is not a Lenbox Order skip changing order state
-            $order_state = $order->getState();
-            $methodTitle = $order->getPayment()->getMethodInstance()->getTitle();
-            if ($order_state != Order::STATE_PAYMENT_REVIEW || $methodTitle != "Lenbox CBNX") {
-                continue;
-            }
-            $order->setStatus(Order::STATE_CANCELED);
-            $order->setState(Order::STATE_CANCELED);
-            $order->save();
-        }
     }
 }
