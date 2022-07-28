@@ -1,6 +1,7 @@
 {
   "name": "lenbox/cbnx-payment",
   "description": "Magento extension for Lenbox cbnx payments integration",
+  "version": "1.0.0",  
   "type": "magento2-module",
   "repositories": [
     {
