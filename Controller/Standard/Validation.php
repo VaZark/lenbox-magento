@@ -34,7 +34,7 @@ class Validation extends Action
         CartManagementInterface $quoteManagement,
         QuoteFactory $quoteFactory,
         Curl $curl,
-        Collection $salesorder,
+        Collection $salesorder
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->request = $request;

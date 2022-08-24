@@ -31,7 +31,7 @@ class Failed extends \Magento\Framework\App\Action\Action
         Collection $salesorder,
         OrderRepositoryInterface $orderRepository,
         ResultFactory $resultFactory,
-        CartRepositoryInterface $quoteRepository,
+        CartRepositoryInterface $quoteRepository
     ) {
         $this->quoteFactory = $quoteFactory;
         $this->cart = $cart;
