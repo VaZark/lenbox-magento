@@ -63,7 +63,7 @@ class Failed extends \Magento\Framework\App\Action\Action
                 // If not in review state or is not a Lenbox Order skip changing order state
                 $order_state = $order->getState();
                 $methodTitle = $order->getPayment()->getMethodInstance()->getTitle();
-                if ($order_state != Order::STATE_PAYMENT_REVIEW || $methodTitle != "Lenbox CBNX") {
+                if (!($order_state == Order::STATE_PAYMENT_REVIEW || order_state == Order::STATE_PENDING_PAYMENT) || $methodTitle != "Lenbox CBNX") {
                     continue;
                 }
                 $order->setStatus(Order::STATE_CANCELED);

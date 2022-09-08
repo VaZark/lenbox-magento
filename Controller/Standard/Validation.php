@@ -130,7 +130,7 @@ class Validation extends Action
         ];
 
         $product_id = $this->request->getParam('product_id');
-        // error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
+        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
 
         $order = $this->validate_quote($data, $product_id);
         if (!$data['has_error']) {
@@ -157,13 +157,15 @@ class Validation extends Action
 
         try {
             $orderObjArr = $this->salesorder->addFieldToFilter('quote_id', $product_id)->getData();
+            error_log("Fetched productID from URL " . json_encode($orderObjArr), 3, "/bitnami/magento/var/log/custom_error.log");
+
             // If order is in payment review state or is a Lenbox Order, select that instance
             foreach ($orderObjArr as $orderObj) {
                 $order_id = $orderObj['entity_id'];
                 $current_order = $this->orderRepository->get($order_id);
                 $order_state = $current_order->getState();
                 $methodTitle = $current_order->getPayment()->getMethodInstance()->getTitle();
-                if ($order_state === Order::STATE_PAYMENT_REVIEW && $methodTitle === "Lenbox CBNX") {
+                if (($order_state === Order::STATE_PAYMENT_REVIEW || $order_state === Order::STATE_PENDING_PAYMENT) && $methodTitle === "Lenbox CBNX") {
                     $order = $current_order;
                     break;
                 }
