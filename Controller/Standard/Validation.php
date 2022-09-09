@@ -130,7 +130,7 @@ class Validation extends Action
         ];
 
         $product_id = $this->request->getParam('product_id');
-        error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
+        // error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
 
         $order = $this->validate_quote($data, $product_id);
         if (!$data['has_error']) {
@@ -157,7 +157,7 @@ class Validation extends Action
 
         try {
             $orderObjArr = $this->salesorder->addFieldToFilter('quote_id', $product_id)->getData();
-            error_log("Fetched productID from URL " . json_encode($orderObjArr), 3, "/bitnami/magento/var/log/custom_error.log");
+            // error_log("Fetched productID from URL " . json_encode($orderObjArr), 3, "/bitnami/magento/var/log/custom_error.log");
 
             // If order is in payment review state or is a Lenbox Order, select that instance
             foreach ($orderObjArr as $orderObj) {
