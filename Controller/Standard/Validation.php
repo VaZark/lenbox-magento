@@ -177,12 +177,15 @@ class Validation extends Action
 
                 $current_order = $this->orderRepository->get($order_id);
                 $order_state = $current_order->getState();
-                $methodTitle = $current_order->getPayment()->getMethodInstance()->getTitle();
+                $methodTitle = $current_order->getPayment()->getMethodInstance()->getCode();
 
                 $this->logger->info("lenbox :: Order state : " . $order_state);
                 $this->logger->info("lenbox :: methodTitle : " . $methodTitle);
 
-                if (($order_state === Order::STATE_PAYMENT_REVIEW || $order_state === Order::STATE_PENDING_PAYMENT) && $methodTitle === "Lenbox CBNX") {
+                if (
+                    ($order_state === Order::STATE_PAYMENT_REVIEW || $order_state === Order::STATE_PENDING_PAYMENT)
+                    && $methodTitle === "lenbox_standard"
+                ) {
                     $order = $current_order;
                     $this->logger->info("lenbox :: Order ID  $order_id matches the request.");
                     break;
