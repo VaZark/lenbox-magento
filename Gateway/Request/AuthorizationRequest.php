@@ -79,8 +79,8 @@ class AuthorizationRequest implements BuilderInterface
 
             $lower_bound = $this->scopeConfig->getValue($base_settings_path . '/min_' . $key, ScopeInterface::SCOPE_STORE);
             $upper_bound = $this->scopeConfig->getValue($base_settings_path . '/max_' . $key, ScopeInterface::SCOPE_STORE);
-            // error_log("Lower Bound value " . json_encode($lower_bound), 3,  '/bitnami/magento/var/log/custom_error.log');
-            // error_log("Upper Bound value " . json_encode($upper_bound), 3,  '/bitnami/magento/var/log/custom_error.log');
+            // $this->logger->info("lenbox :: Lower Bound value " . json_encode($lower_bound));
+            // $this->logger->info("lenbox :: Upper Bound value " . json_encode($upper_bound));
 
             $is_valid_lower = $lower_bound ? $lower_bound <= $total : true;
             $is_valid_upper = $upper_bound ? $upper_bound >= $total : true;
@@ -136,7 +136,7 @@ class AuthorizationRequest implements BuilderInterface
             "paymentoptions" => $selected_options,
         ];
 
-        // error_log("Params for getFormSplit" . json_encode($params), 3, "/bitnami/magento/var/log/custom_error.log");
+        // $this->logger->info("lenbox ::Params for getFormSplit" . json_encode($params));
 
         return $params;
     }

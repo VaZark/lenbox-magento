@@ -15,6 +15,7 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Sales\Model\ResourceModel\Sale\Collection;
+use Psr\Log\LoggerInterface;
 
 class Validation extends Action
 {
@@ -24,6 +25,7 @@ class Validation extends Action
     protected $resultJsonFactory;
     protected $_pageFactory;
     protected $orderRepository;
+    protected $logger;
 
     public function __construct(
         ScopeConfigInterface $scopeConfig,
@@ -34,7 +36,8 @@ class Validation extends Action
         CartManagementInterface $quoteManagement,
         QuoteFactory $quoteFactory,
         Curl $curl,
-        Collection $salesorder
+        Collection $salesorder,
+        LoggerInterface $logger
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->request = $request;
@@ -44,6 +47,7 @@ class Validation extends Action
         $this->quoteFactory = $quoteFactory;
         $this->curl = $curl;
         $this->salesorder = $salesorder;
+        $this->logger = $logger;
         parent::__construct($context);
     }
 
@@ -65,6 +69,8 @@ class Validation extends Action
             'productId' => $quote_id,
         );
 
+        $this->logger->info("lenbox :: Form status URL : $url");
+        $this->logger->info("lenbox :: Form status body :" . json_encode($params));
         $this->curl->addHeader("Content-Type", "application/json");
 
         $attempt = 0;
@@ -86,11 +92,12 @@ class Validation extends Action
         if (!$http_success) {
             $data['has_error'] = true;
             $data['status'] = "CONNECTION_ERROR";
-            $data['action_details'] = "Error invoking getformstatus for productId " . $quote_id;
+            $data['action_details'] = "Error invoking getformstatus for productId : $quote_id";
             return;
         }
 
         $response = json_decode($this->curl->getBody(), false);
+        $this->logger->info("lenbox :: Form status response :" . json_encode($response));
 
         if ($response->status == "success") {
             if ($response->response->accepted) {
@@ -110,9 +117,11 @@ class Validation extends Action
             $order->save();
         } else {
             // Unexpected Error (usually config errors)
+            $err_msg = $response->message ?? json_encode($response);
             $data['has_error'] = true;
             $data['status'] = "ERROR";
-            $data['action_details'] = $response->message ?? json_encode($response);
+            $data['action_details'] = $err_msg;
+            $this->logger->info("lenbox :: Form status response : $err_msg");
         }
     }
 
@@ -130,7 +139,7 @@ class Validation extends Action
         ];
 
         $product_id = $this->request->getParam('product_id');
-        // error_log("Fetched productID from URL " . json_encode($product_id), 3, "/bitnami/magento/var/log/custom_error.log");
+        $this->logger->info("lenbox :: ProductID (Quote ID) in URL :" . json_encode($product_id));
 
         $order = $this->validate_quote($data, $product_id);
         if (!$data['has_error']) {
@@ -157,29 +166,41 @@ class Validation extends Action
 
         try {
             $orderObjArr = $this->salesorder->addFieldToFilter('quote_id', $product_id)->getData();
-            // error_log("Fetched productID from URL " . json_encode($orderObjArr), 3, "/bitnami/magento/var/log/custom_error.log");
+            $this->logger->info("lenbox :: Is Order Object Array empty : " . json_encode(empty($orderObjArr)));
 
-            // If order is in payment review state or is a Lenbox Order, select that instance
+            // If order is in "payment_review" or "payment_pending" state & is a Lenbox Order, select that instance
             foreach ($orderObjArr as $orderObj) {
+                // $this->logger->info("lenbox :: current order object : " . json_encode($orderObj));
+
                 $order_id = $orderObj['entity_id'];
+                $this->logger->info("lenbox :: Order ID : " . $order_id);
+
                 $current_order = $this->orderRepository->get($order_id);
                 $order_state = $current_order->getState();
                 $methodTitle = $current_order->getPayment()->getMethodInstance()->getTitle();
+
+                $this->logger->info("lenbox :: Order state : " . $order_state);
+                $this->logger->info("lenbox :: methodTitle : " . $methodTitle);
+
                 if (($order_state === Order::STATE_PAYMENT_REVIEW || $order_state === Order::STATE_PENDING_PAYMENT) && $methodTitle === "Lenbox CBNX") {
                     $order = $current_order;
+                    $this->logger->info("lenbox :: Order ID  $order_id matches the request.");
                     break;
                 }
+                $this->logger->info("lenbox :: Order ID $order_id was not valid.");
             }
             if (empty($order)) {
                 $data['has_error'] = true;
                 $data['status'] = 'NO_PERFECT_MATCH';
-                $data['action_details'] = 'There exists no lenbox order for the Quote ID ' . $product_id . ' which is in a pending state';
+                $data['action_details'] = "There exists no lenbox order for the Quote ID  $product_id which is in a pending state";
+                $this->logger->info("lenbox :: No pending Order for Quote ID $product_id was found.");
                 return;
             }
         } catch (\Throwable $th) {
             $data['has_error'] = true;
             $data['status'] = 'MISSING_ORDER';
-            $data['action_details'] = 'Order does not exist for Quote ID ' . $product_id;
+            $data['action_details'] = "Order does not exist for Quote ID $product_id";
+            $this->logger->info("lenbox :: No valid Order for Quote ID $product_id was found.");
             return;
         }
 
